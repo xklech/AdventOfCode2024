@@ -12,7 +12,7 @@ fun main (){
     val data = "4a-data.txt"
 
 
-    val inputData = readFile(sample)
+    val inputData = readFile(data)
     var result = 0
 
     //left right + right left
@@ -25,11 +25,12 @@ fun main (){
     println("Traverse diagonally -_-")
     for (i in 0 .. inputData[0].length-4) {
         val subMatrixRight = inputData.subList(i, i+4).mapIndexed { index, line ->  line.takeLast(line.length-index) + "b".repeat(index)}
-
+        println(subMatrixRight)
         result += countXmassInColumn(subMatrixRight)
-        val subMatrixLeft = inputData.subList(i, i+4).mapIndexed { index, line ->  "b".repeat(3-index) + line.substring(0, line.length-index-3)}
-        result += countXmassInColumn(subMatrixLeft)
+        println("Traverse diagonally -_- divider")
+        val subMatrixLeft = inputData.subList(i, i+4).mapIndexed { index, line ->  "b".repeat(index) + line.substring(0, line.length-index)}
         println(subMatrixLeft)
+        result += countXmassInColumn(subMatrixLeft)
     }
 
     println("\n\n Result: $result")
