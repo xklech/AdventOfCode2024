@@ -13,67 +13,48 @@ fun main (){
     val data = "5a-data.txt"
 
     val inputData = readFile(data)
-    val orderingRules = extractOrderingRules(inputData)
-    val pageUpdates = extractPageUpdates(inputData)
+    val orderingRules = extractRules(inputData)
+    val pageUpdates = extractUpdates(inputData)
 
-    val updates = pageUpdates.map { line -> Regex("\\d+").findAll(line).map { it.value.toInt() }.toList() }
-    val invalidUpdates = updates.filter { update -> !isValid(update, orderingRules) }
-    println(invalidUpdates.size)
+    fun missing(left: Int, right: Int) = left to right !in orderingRules
 
-    val count = AtomicInteger()
-    val remaining = AtomicInteger()
-    val threads = ArrayDeque<Thread>()
-    invalidUpdates.forEach { update ->
-        threads.addFirst(thread(start = false) {
-            val permutation = permutationsRecursive(orderingRules, update, 0)
-            println(permutation)
-            println(permutation[permutation.size / 2])
-            count.addAndGet(permutation[permutation.size / 2])
-            remaining.addAndGet(1)
-            println("Updated result: ${count.get()}")
-            println("Done: ${remaining.get()}/${invalidUpdates.size}")
-            if(threads.isNotEmpty()) {
-                threads.pop().start()
-            }
-        })
+    fun isValid(ints: List<Int>): Boolean {
+        for (li in 0..<ints.lastIndex)
+            for (ri in li + 1..ints.lastIndex)
+                if (missing(ints[li], ints[ri]))
+                    return false
+        return true
     }
-    println("Processors: ${Runtime.getRuntime().availableProcessors()}")
-    for (i in 1..Runtime.getRuntime().availableProcessors()-2) {
-        threads.pop().start()
+
+    val result = pageUpdates.filterNot(::isValid).map(List<Int>::toMutableList).sumOf { update ->
+        check@ while (true) {
+            for (li in 0..<update.lastIndex) {
+                val left = update[li]
+                val ri = li + 1
+                val right = update[ri]
+
+                if (missing(left, right)) {
+                    update[li] = right
+                    update[ri] = left
+                    continue@check
+                }
+            }
+            break
+        }
+
+        update[update.size / 2]
+    }
+
+    println("Result: $result")
+}
+
+fun extractRules(data: List<String>): List<Pair<Int, Int>> {
+    return data.filter { Regex("\\d+\\|\\d+").matches(it) }.map {
+        val (left, right) = it.split("|", limit = 2).map { it.toInt() }
+        left to right
     }
 }
 
-fun isValid(updates: List<Int>, orderingRules: Rules): Boolean {
-    var isValid = true
-    updates.forEachIndexed {index, item ->
-        val before = if (index > 0 ) updates.subList(0, index) else listOf()
-        val after = if (index < updates.size -1) updates.subList(index + 1 , updates.size) else listOf()
-
-        before.forEach { beforeValue ->
-            if (orderingRules.after.containsKey(item) && orderingRules.after[item]!!.contains(beforeValue)) {
-                isValid = false
-            }
-        }
-        after.forEach { afterValue ->
-            if (orderingRules.before.containsKey(item) && orderingRules.before[item]!!.contains(afterValue)) {
-                isValid = false
-            }
-        }
-    }
-    return isValid
-}
-
-fun permutationsRecursive(rules: Rules, input: List<Int>, index: Int): List<Int> {
-    if (index == input.lastIndex && isValid(input, rules)) {
-        return input
-    }
-    for (i in index .. input.lastIndex) {
-        Collections.swap(input, index, i)
-        val result = permutationsRecursive(rules, input, index + 1)
-        if (result.isNotEmpty()) {
-            return result
-        }
-        Collections.swap(input, i, index)
-    }
-    return listOf()
+fun extractUpdates(data: List<String>): List<List<Int>> {
+    return data.filter { Regex("\\d+,").findAll(it).count() > 0 }.map { it.split(",").map { it.toInt() }}
 }
