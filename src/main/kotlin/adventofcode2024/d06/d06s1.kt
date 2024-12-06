@@ -5,7 +5,6 @@ import java.security.KeyStore.TrustedCertificateEntry
 import kotlin.math.abs
 
 val directions = listOf('^','>','v','<')
-val visitedPlaces = mutableSetOf<Pair<Int, Int>>()
 
 fun main (){
 
@@ -16,22 +15,48 @@ fun main (){
 
     val input = readFile(data)
 
-    var (i, j) = findInitLocation(input)
-    var directionIndex = directions.indexOf(input[i][j])
+    val maxTriesUntilLoop = input.size * input[0].length * 4
 
-    println("Init: ${findInitLocation(input)}, initDirection: ${directions[directionIndex]}")
+    val (initI, initJ) = findInitLocation(input)
+    val directionIndex = directions.indexOf(input[initI][initJ])
+    var result = 0
+   for (i in input.indices) {
+       for (j in input[0].indices) {
+           if ((i == initI && j == initJ) || input[i][j] == '#') {
+               continue
+           }
+           val copy = input.toMutableList()
+           copy[i] = copy[i].replaceRange(j,j+1,"#")
+
+           if (isLoop(maxTriesUntilLoop, copy, initI, initJ, directionIndex)) {
+               result++
+           }
+
+           println("Result: $result")
+       }
+   }
+
+    println("\n\n Result: $result")
+}
+
+fun isLoop(maxTries: Int, input: List<String>, initI: Int, initJ: Int, initDirection: Int): Boolean {
     var inBounds = true
+    var i = initI
+    var j = initJ
+    var directionIndex = initDirection
+    var tries = 0
     while (inBounds) {
-        visitedPlaces.add(Pair(i,j))
+        tries++
         val nextStep = getNextStep(input, Pair(i,j), directionIndex)
-        println("Next Step: $nextStep Count: ${visitedPlaces.count()}")
         i = nextStep.first
         j = nextStep.second
         directionIndex = nextStep.third
         inBounds = isInBounds(input,i,j)
+        if (tries > maxTries) {
+            return true
+        }
     }
-
-    println("\n\n Result: ${visitedPlaces.count()}")
+    return false
 }
 
 fun readFile(fileName: String): List<String>
