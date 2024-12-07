@@ -40,6 +40,7 @@ fun isValid(goal: Long, numbers: List<Long>): Boolean {
             result = when(perm[i-1]){
                 '+' -> result + next
                 '*' -> result * next
+                '.' -> (result.toString() + next.toString()).toLong()
                 else -> 0
             }
             if (result > goal) {
@@ -55,7 +56,7 @@ fun isValid(goal: Long, numbers: List<Long>): Boolean {
 
     return false
 }
-val permutationOperations = listOf('+', '*')
+val permutationOperations = listOf('+', '*', '.')
 
 fun permutations(operationsCount: Int): List<List<Char>> {
     val permutations = mutableListOf<List<Char>>()
