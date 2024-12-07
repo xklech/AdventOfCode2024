@@ -18,12 +18,12 @@ fun main (){
         val numbers = lineNumbers.subList(1,lineNumbers.size)
         if (isValid(lineResult, numbers)) {
             result += lineResult
-            println("HIT: $lineResult")
         }
     }
 
 
     println("\n\n Result: $result")
+    println("\n\n Long max: ${Long.MAX_VALUE}")
 }
 
 
@@ -31,9 +31,7 @@ fun readFile(fileName: String): List<String>
         = File("src${File.separator}main${File.separator}resources${File.separator}" + fileName).useLines { it.toList() }
 
 fun isValid(goal: Long, numbers: List<Long>): Boolean {
-    println("goal: $goal, numbers: $numbers")
     val permutations = permutations(numbers.size -1)
-    println("Permutations: $permutations")
     var result:Long = -1
     permutations.forEach { perm ->
         result = numbers[0]
@@ -47,9 +45,11 @@ fun isValid(goal: Long, numbers: List<Long>): Boolean {
             if (result > goal) {
                 break
             }
-            if(result == goal) {
-                return true
-            }
+        }
+        if(result == goal) {
+            println("goal: $goal, numbers: $numbers")
+            println("winning perm: $perm")
+            return true
         }
     }
 
