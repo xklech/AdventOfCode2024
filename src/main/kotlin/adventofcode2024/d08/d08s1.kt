@@ -18,7 +18,6 @@ fun main (){
     println("\n\n Result: $result")
 }
 
-
 fun readFile(fileName: String): List<String>
         = File("src${File.separator}main${File.separator}resources${File.separator}" + fileName).useLines { it.toList() }
 
@@ -38,27 +37,49 @@ fun antiNodes(data: List<String>): Set<Pair<Int,Int>> {
     val possibleAntiNodes = mutableSetOf<Pair<Int, Int>>()
     val nodes = extractNodes(data)
     println(nodes)
-    nodes.forEach { char, list ->
-        for (i in 0..list.lastIndex) {
-            for (j in i..list.lastIndex) {
-                if (i == j) {
-                    continue
+    nodes.forEach { (_, list) ->
+        if (list.size > 1) {
+            for (i in 0..list.lastIndex) {
+                for (j in i..list.lastIndex) {
+                    if (i == j) {
+                        continue
+                    }
+                    val firstNode = list[i]
+                    val secondNode = list[j]
+                    possibleAntiNodes.addAll(getPossibleAntiNodes(data, firstNode, secondNode))
                 }
-                val firstNode = list[i]
-                val secondNode = list[j]
-                possibleAntiNodes.addAll(getPossibleAntiNodes(firstNode, secondNode))
             }
         }
     }
     return possibleAntiNodes.filter { node -> isInBounds(data, node.first, node.second) }.toSet()
 }
 
-fun getPossibleAntiNodes(firstNode: Pair<Int,Int>, secondNode: Pair<Int,Int>): Set<Pair<Int,Int>> {
+fun getPossibleAntiNodes(data:List<String>, firstNode: Pair<Int,Int>, secondNode: Pair<Int,Int>): Set<Pair<Int,Int>> {
     val vector = Pair(firstNode.first-secondNode.first, firstNode.second-secondNode.second)
-    return setOf(
-        Pair(firstNode.first+vector.first, firstNode.second+vector.second),
-        Pair(secondNode.first-vector.first, secondNode.second-vector.second)
-    )
+    val set = mutableSetOf(firstNode, secondNode)
+
+    set.addAll(generateNextNodes(data, firstNode, vector))
+    val reverseVector = Pair(vector.first*-1,vector.second*-1)
+    set.addAll(generateNextNodes(data, secondNode, reverseVector))
+
+    return set
+}
+
+fun generateNextNodes(data: List<String>, current: Pair<Int, Int>, vector: Pair<Int, Int>): Set<Pair<Int, Int>> {
+    val set = mutableSetOf<Pair<Int, Int>>()
+    var next = current
+    while (true) {
+        next = generateNextNode(next, vector)
+        if (!isInBounds(data, next.first, next.second)) {
+            break
+        }
+        set.add(next)
+    }
+    return set
+}
+
+fun generateNextNode(current: Pair<Int, Int>, vector: Pair<Int, Int>): Pair<Int, Int> {
+    return Pair(current.first+vector.first, current.second+vector.second)
 }
 
 fun isInBounds(input: List<String>, i: Int, j: Int): Boolean {
