@@ -2,7 +2,7 @@ package eu.klech.adventofcode2024.d10
 
 import java.io.File
 
-fun main (){
+fun main () {
 
     println("Path: ${File("src${File.separator}main${File.separator}resources${File.separator}" +"1a-sample.txt").absolutePath}")
 
@@ -14,10 +14,7 @@ fun main (){
     val zeros = getStartPositions(input)
     println(zeros)
 
-    val r = zeros.map { countTrailHeads(input, it) }.flatten()
-    println("Result nines: $r")
-
-    val result = r.size
+    val result = zeros.sumOf { countTrailHeads(input, it) }
     println("\n\n Result: $result")
 }
 
@@ -26,20 +23,20 @@ fun readFile(fileName: String): List<List<Int>>
             .useLines { it.toList() }
             .map { Regex("\\d").findAll(it).map { it.value.toInt() }.toList() }
 
-fun countTrailHeads(data: List<List<Int>>, item: Pair<Int,Int>): Set<Pair<Int, Int>> {
+fun countTrailHeads(data: List<List<Int>>, item: Pair<Int,Int>): Int {
     if(data[item.first][item.second] == 9) {
-        return setOf(item)
+        return 1
     }
-    val set = mutableSetOf<Pair<Int,Int>>()
+    var result = 0
     potentialNeighbours(item.first, item.second).forEach { potentialNeighbour ->
         if(isInBounds(data, potentialNeighbour.first, potentialNeighbour.second)) {
             val neighbour = data[potentialNeighbour.first][potentialNeighbour.second]
             if (neighbour == data[item.first][item.second] + 1) {
-                set.addAll(countTrailHeads(data, Pair(potentialNeighbour.first, potentialNeighbour.second)))
+                result += countTrailHeads(data, Pair(potentialNeighbour.first, potentialNeighbour.second))
             }
         }
     }
-    return set
+    return result
 }
 
 fun potentialNeighbours(i: Int, j: Int): Set<Pair<Int,Int>> {
