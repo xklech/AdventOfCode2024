@@ -2,6 +2,8 @@ package eu.klech.adventofcode2024.d11
 
 import java.io.File
 
+val cache: MutableMap<Pair<Int,Long>, Long> = mutableMapOf()
+
 fun main () {
 
     println("Path: ${File("src${File.separator}main${File.separator}resources${File.separator}" +"1a-sample.txt").absolutePath}")
@@ -12,6 +14,7 @@ fun main () {
     val input = readFile(data)
 
     val result = countNumbersAfter25Blinks(input)
+    println("Cache items: ${cache.size}")
     println("\n\n Result: $result")
 }
 
@@ -20,30 +23,33 @@ fun readFile(fileName: String): List<Long>
             .useLines { it.toList() }
             .map { Regex("\\d+").findAll(it).map { it.value.toLong() }.toList() } [0]
 
-fun countNumbersAfter25Blinks(data: List<Long>): Int {
-    val numbers = data.toMutableList()
-    repeat(25) { index ->
-        if (index <5) println(numbers)
-        var i = 0
-        while(i <= numbers.lastIndex) {
-            if(numbers[i] == 0L) {
-                numbers[i] = 1L
-            } else {
-                val str = numbers[i].toString()
-                if(str.isEven()) {
-                    val firstStone = str.splitAtIndex(str.length/2).first.toLong()
-                    val secondStone = str.splitAtIndex(str.length/2).second.toLong()
-                    numbers.add(i, firstStone)
-                    numbers[i+1] = secondStone
-                    i++
-                } else {
-                    numbers[i] *= 2024L
-                }
-            }
-            i++
+fun countNumbersAfter25Blinks(data: List<Long>): Long {
+    return data.sumOf {fillCacheRecursively(1, it) }
+}
+
+fun fillCacheRecursively(level:Int, stone: Long): Long {
+    if (level > 75) {
+        return 1
+    }
+    if (cache.containsKey(Pair(level, stone))) {
+        return cache[Pair(level, stone)]!!
+    }
+    //expand
+    val count: Long
+    if(stone == 0L) {
+        count = fillCacheRecursively(level+1, 1L)
+    } else {
+        val str = stone.toString()
+        if(str.isEven()) {
+            val firstStone = str.splitAtIndex(str.length/2).first.toLong()
+            val secondStone = str.splitAtIndex(str.length/2).second.toLong()
+            count = fillCacheRecursively(level+1, firstStone) + fillCacheRecursively(level+1, secondStone)
+        } else {
+            count = fillCacheRecursively(level+1, stone*2024L)
         }
     }
-    return numbers.size
+    cache[Pair(level, stone)] = count
+    return count
 }
 
 fun String.isEven(): Boolean = this.length % 2 == 0
